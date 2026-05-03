@@ -1,0 +1,116 @@
+.bg-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  background: var(--bg-primary);
+  overflow: hidden;
+  pointer-events: none;
+  transition: background 0.5s ease;
+}
+
+/* Starfield Logic */
+.stars, .stars2, .stars3 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+[data-theme='light'] .stars, 
+[data-theme='light'] .stars2, 
+[data-theme='light'] .stars3 {
+  opacity: 0.15;
+  filter: invert(1);
+}
+
+.stars {
+  background: transparent url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/123163/stars.png') repeat top center;
+  z-index: 0;
+  animation: move-twink-back 200s linear infinite;
+}
+
+.stars2 {
+  background: transparent url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/123163/stars.png') repeat top center;
+  z-index: 1;
+  opacity: 0.5;
+  animation: move-twink-back 150s linear infinite;
+  transform: scale(1.5);
+}
+
+.stars3 {
+  background: transparent url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/123163/stars.png') repeat top center;
+  z-index: 2;
+  opacity: 0.3;
+  animation: move-twink-back 100s linear infinite;
+  transform: scale(2);
+}
+
+/* Nebula Glows */
+.nebula-1, .nebula-2 {
+  position: absolute;
+  width: 60vw;
+  height: 60vw;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.nebula-1 {
+  top: -10%;
+  left: -10%;
+  background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
+  animation: rotate-nebula 30s linear infinite;
+}
+
+.nebula-2 {
+  bottom: -10%;
+  right: -10%;
+  background: radial-gradient(circle, #3b82f6 0%, transparent 70%);
+  animation: rotate-nebula 40s linear infinite reverse;
+}
+
+[data-theme='light'] .nebula-1,
+[data-theme='light'] .nebula-2 {
+  opacity: 0.08;
+}
+
+@keyframes move-twink-back {
+  from { background-position: 0 0; }
+  to { background-position: -10000px 5000px; }
+}
+
+@keyframes rotate-nebula {
+  from { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.2); }
+  to { transform: rotate(360deg) scale(1); }
+}
+
+/* Shooting Star */
+.bg-container::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2px;
+  height: 2px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(255,255,255,0.1), 0 0 0 8px rgba(255,255,255,0.1), 0 0 20px rgba(255,255,255,1);
+  animation: animate-star 3s linear infinite;
+  opacity: 0;
+}
+
+@keyframes animate-star {
+  0% { transform: rotate(315deg) translateX(0); opacity: 0; }
+  70% { opacity: 1; }
+  100% { transform: rotate(315deg) translateX(-1000px); opacity: 0; }
+}

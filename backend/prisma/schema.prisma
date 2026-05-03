@@ -1,0 +1,314 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────
+
+enum Role {
+  SUPER_ADMIN
+  STUDENT
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  REJECTED
+}
+
+enum TestStatus {
+  DRAFT
+  PUBLISHED
+  SCHEDULED
+  EXPIRED
+  UNPUBLISHED
+}
+
+enum AttemptStatus {
+  IN_PROGRESS
+  SUBMITTED
+  TIMED_OUT
+}
+
+// ─────────────────────────────────────────
+// USERS
+// ─────────────────────────────────────────
+
+model User {
+  id               String     @id @default(uuid())
+  name             String
+  email            String     @unique
+  phone            String?
+  passwordHash     String
+  role             Role       @default(STUDENT)
+  status           UserStatus @default(PENDING)
+  profileImageUrl  String?
+  college          String?
+  targetExam       String?    // JEE / NEET / MHT-CET
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  lastLoginAt      DateTime?
+  resetToken       String?
+  resetTokenExpiry DateTime?
+
+  attempts    Attempt[]
+  comments    Comment[]
+  likes       Like[]
+  feedbacks   Feedback[]
+  auditLogs   AuditLog[]
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────
+// CATEGORIES / SUBCATEGORIES / SECTIONS
+// ─────────────────────────────────────────
+
+model Category {
+  id          String        @id @default(uuid())
+  name        String        @unique // JEE, NEET, MHT-CET
+  description String?
+  iconUrl     String?
+  isActive    Boolean       @default(true)
+  sortOrder   Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  subcategories Subcategory[]
+
+  @@map("categories")
+}
+
+model Subcategory {
+  id          String    @id @default(uuid())
+  name        String    // 11th, 12th, Dropper
+  description String?
+  isActive    Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  sections    Section[]
+
+  @@unique([categoryId, name])
+  @@map("subcategories")
+}
+
+model Section {
+  id            String    @id @default(uuid())
+  name          String    // Full Test Series, Chapter-wise, Mock Tests, etc.
+  description   String?
+  isActive      Boolean   @default(true)
+  sortOrder     Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  subcategoryId String
+  subcategory   Subcategory @relation(fields: [subcategoryId], references: [id], onDelete: Cascade)
+
+  tests         Test[]
+
+  @@unique([subcategoryId, name])
+  @@map("sections")
+}
+
+// ─────────────────────────────────────────
+// TESTS
+// ─────────────────────────────────────────
+
+model Test {
+  id                  String     @id @default(uuid())
+  title               String
+  description         String?
+  instructions        String?
+  durationMinutes     Int        @default(60)
+  status              TestStatus @default(DRAFT)
+  totalMarks          Int        @default(0)
+  negativeMarking     Boolean    @default(false)
+  negativeMarkValue   Float      @default(0.25)
+  allowRetake         Boolean    @default(false)
+  maxAttempts         Int        @default(1)
+  showAnswersAfter    Boolean    @default(true)
+  isFullScreen        Boolean    @default(true)
+  startDate           DateTime?
+  expiryDate          DateTime?
+  publishedAt         DateTime?
+  thumbnailUrl        String?
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  sectionId   String
+  section     Section    @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  questions   Question[]
+  attempts    Attempt[]
+  comments    Comment[]
+  likes       Like[]
+
+  @@map("tests")
+}
+
+// ─────────────────────────────────────────
+// QUESTIONS & OPTIONS
+// ─────────────────────────────────────────
+
+model Question {
+  id              String   @id @default(uuid())
+  questionText    String
+  questionImageUrl String?
+  explanation     String?
+  explanationImageUrl String?
+  marks           Float    @default(4)
+  negativeMarks   Float    @default(1)
+  isMultipleCorrect Boolean @default(false)
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  testId    String
+  test      Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  options   Option[]
+  responses Response[]
+
+  @@map("questions")
+}
+
+model Option {
+  id         String   @id @default(uuid())
+  optionText String
+  imageUrl   String?
+  isCorrect  Boolean  @default(false)
+  sortOrder  Int      @default(0)
+
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@map("options")
+}
+
+// ─────────────────────────────────────────
+// ATTEMPTS & RESPONSES
+// ─────────────────────────────────────────
+
+model Attempt {
+  id            String        @id @default(uuid())
+  status        AttemptStatus @default(IN_PROGRESS)
+  startedAt     DateTime      @default(now())
+  submittedAt   DateTime?
+  timeTakenSecs Int?
+  score         Float?
+  totalMarks    Float?
+  correctCount  Int?
+  incorrectCount Int?
+  unattemptedCount Int?
+  rank          Int?
+  percentile    Float?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  testId  String
+  test    Test   @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  responses Response[]
+
+  @@map("attempts")
+}
+
+model Response {
+  id               String   @id @default(uuid())
+  selectedOptionIds String[] // supports multiple correct answers
+  isMarkedForReview Boolean @default(false)
+  isCorrect        Boolean?
+  marksAwarded     Float?
+  answeredAt       DateTime?
+
+  attemptId  String
+  attempt    Attempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([attemptId, questionId])
+  @@map("responses")
+}
+
+// ─────────────────────────────────────────
+// SOCIAL: COMMENTS & LIKES
+// ─────────────────────────────────────────
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  testId String
+  test   Test   @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  testId String
+  test   Test   @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, testId])
+  @@map("likes")
+}
+
+// ─────────────────────────────────────────
+// FEEDBACK
+// ─────────────────────────────────────────
+
+model Feedback {
+  id        String   @id @default(uuid())
+  subject   String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("feedbacks")
+}
+
+// ─────────────────────────────────────────
+// AUDIT LOG
+// ─────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  action     String
+  entity     String?
+  entityId   String?
+  details    Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("audit_logs")
+}

@@ -1,0 +1,38 @@
+{
+  "name": "balaji-test-portal-backend",
+  "version": "1.0.0",
+  "description": "SHREE BALAJI COACHING CLASSES - Online Test Portal Backend API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "seed": "node prisma/seed.js",
+    "db:push": "npx prisma db push",
+    "db:generate": "npx prisma generate",
+    "db:studio": "npx prisma studio",
+    "db:migrate": "npx prisma migrate dev",
+    "postinstall": "prisma generate"
+  },
+  "keywords": ["balaji", "coaching", "test-portal", "jee", "neet", "mht-cet"],
+  "author": "Prof. Ravindra Thakare",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.10.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.4.1",
+    "express-validator": "^7.3.2",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.10.1",
+    "multer": "^2.1.1",
+    "node-cron": "^4.2.1",
+    "nodemailer": "^8.0.7",
+    "pdf-parse": "^2.4.5",
+    "prisma": "^6.19.3",
+    "uuid": "^14.0.0"
+  }
+}
