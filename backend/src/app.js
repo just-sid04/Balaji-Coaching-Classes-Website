@@ -15,8 +15,21 @@ const app = express();
 
 // ─── Security Middleware ───────────────────────────────────────────────────────
 app.use(helmet());
+
+const allowedOrigins = [
+  'http://localhost:5173',
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    // Allow same-origin (Vercel monorepo) or listed origins
+    if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
 
@@ -53,10 +66,22 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api', publicRoutes);
 
 // ─── Health Check ──────────────────────────────────────────────────────────────
-app.get('/health', (req, res) => {
+app.get('/health', async (req, res) => {
+  let dbStatus = 'unknown';
+  try {
+    const prisma = require('./lib/prisma');
+    await prisma.$queryRaw`SELECT 1`;
+    dbStatus = 'connected';
+  } catch (err) {
+    dbStatus = 'disconnected';
+    console.error('Health check DB error:', err.message);
+  }
+
   res.json({
-    status: 'ok',
+    status: dbStatus === 'connected' ? 'ok' : 'error',
+    database: dbStatus,
     service: 'Balaji Test Portal API',
+    environment: process.env.NODE_ENV || 'development',
     timestamp: new Date().toISOString(),
   });
 });
