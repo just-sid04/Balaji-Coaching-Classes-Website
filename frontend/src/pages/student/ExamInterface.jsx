@@ -37,6 +37,11 @@ export default function ExamInterface() {
   }, [testId]);
 
   const startExam = async () => {
+    // Request fullscreen immediately to satisfy browser user-gesture requirements
+    if (test?.isFullScreen) {
+      document.documentElement.requestFullscreen?.().catch(() => {});
+    }
+
     try {
       setPhase('loading');
       const r = await studentAPI.startTest(testId);
@@ -50,12 +55,10 @@ export default function ExamInterface() {
       r.data.test.questions.forEach(q => { init[q.id] = { selectedOptionIds: [], isMarkedForReview: false }; });
       setResponses(init);
       setPhase('exam');
-      if (r.data.test.isFullScreen) {
-        document.documentElement.requestFullscreen?.().catch(() => {});
-      }
     } catch (err) {
       toast.error(err.response?.data?.error || 'Failed to start test');
       navigate('/student/tests');
+      if (document.fullscreenElement) document.exitFullscreen?.();
     }
   };
 
