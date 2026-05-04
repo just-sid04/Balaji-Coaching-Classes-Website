@@ -64,7 +64,10 @@ router.get('/tests', async (req, res) => {
         where,
         skip,
         take: parseInt(limit),
-        orderBy: { publishedAt: 'desc' },
+        orderBy: [
+          { publishedAt: 'desc' },
+          { createdAt: 'desc' }
+        ],
         include: {
           section: { include: { subcategory: { include: { category: true } } } },
           _count: { select: { questions: true, attempts: true, likes: true, comments: true } },
