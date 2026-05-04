@@ -23,8 +23,8 @@
       "destination": "backend/src/app.js"
     },
     {
-      "source": "/((?!api|health).*)",
-      "destination": "/frontend/index.html"
+      "source": "/(.*)",
+      "destination": "frontend/$1"
     }
   ]
 }
