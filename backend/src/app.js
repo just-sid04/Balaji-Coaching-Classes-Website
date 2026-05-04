@@ -65,6 +65,22 @@ app.use('/api/ocr', ocrRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api', publicRoutes);
 
+// ─── Debug Endpoint (Remove in production) ──────────────────────────────────
+app.get('/api/debug', (req, res) => {
+  res.json({
+    env: {
+      NODE_ENV: process.env.NODE_ENV,
+      HAS_DATABASE_URL: !!process.env.DATABASE_URL,
+      HAS_JWT_SECRET: !!process.env.JWT_SECRET,
+      HAS_FRONTEND_URL: !!process.env.FRONTEND_URL,
+      FRONTEND_URL: process.env.FRONTEND_URL,
+    },
+    headers: req.headers,
+    url: req.url,
+    originalUrl: req.originalUrl,
+  });
+});
+
 // ─── Health Check ──────────────────────────────────────────────────────────────
 app.get('/health', async (req, res) => {
   let dbStatus = 'unknown';
