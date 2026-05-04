@@ -69,15 +69,17 @@
   }
 
   ::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
+    height: 8px;
   }
 
   ::-webkit-scrollbar-track {
-    background: transparent;
+    background: var(--bg-primary);
+    border-radius: 10px;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: var(--border);
+    background: var(--text-muted);
     border-radius: 10px;
   }
 
@@ -375,6 +377,52 @@
     .page-content {
       padding: 1rem;
     }
+  }
+
+  /* ─── Tables ──────────────────────────────── */
+  .table-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow-x: auto;
+    box-shadow: var(--shadow);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+
+  th {
+    padding: 1.25rem 1.5rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.02);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-primary);
+    vertical-align: middle;
+  }
+
+  tbody tr {
+    transition: background-color 0.2s ease;
+  }
+
+  tbody tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
   }
 }
 
