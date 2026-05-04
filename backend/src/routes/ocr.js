@@ -10,7 +10,7 @@ router.use(authenticate, requireAdmin);
 
 // ─── Multer config for image/PDF uploads ───────────────────────────────────────
 const upload = multer({
-  dest: path.join(__dirname, '../../uploads/'),
+  dest: '/tmp/',
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
   fileFilter: (req, file, cb) => {
     const allowed = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
