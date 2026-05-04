@@ -23,7 +23,15 @@
       "destination": "backend/src/app.js"
     },
     {
-      "source": "/((?!api/|health).*)",
+      "source": "/assets/(.*)",
+      "destination": "/assets/$1"
+    },
+    {
+      "source": "/favicon.ico",
+      "destination": "/favicon.ico"
+    },
+    {
+      "source": "/((?!api/|health|assets/).*)",
       "destination": "/index.html"
     }
   ]
