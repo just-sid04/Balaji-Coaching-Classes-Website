@@ -88,25 +88,25 @@ export default function AdminUsers() {
         ) : users.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>No users found</div>
         ) : (
-          <table>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
             <thead>
-              <tr>
-                <th>Student</th>
-                <th>Email</th>
-                <th>Target Exam</th>
-                <th>Attempts</th>
-                <th>Status</th>
-                <th>Joined</th>
-                <th>Actions</th>
+              <tr style={{ borderBottom: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)' }}>
+                <th style={{ padding: '1rem', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600, letterSpacing: '0.05em' }}>Student</th>
+                <th style={{ padding: '1rem', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600, letterSpacing: '0.05em' }}>Email</th>
+                <th style={{ padding: '1rem', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600, letterSpacing: '0.05em' }}>Target Exam</th>
+                <th style={{ padding: '1rem', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600, letterSpacing: '0.05em', textAlign: 'center' }}>Attempts</th>
+                <th style={{ padding: '1rem', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600, letterSpacing: '0.05em' }}>Status</th>
+                <th style={{ padding: '1rem', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600, letterSpacing: '0.05em' }}>Joined</th>
+                <th style={{ padding: '1rem', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600, letterSpacing: '0.05em', textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {users.map(u => {
                 const s = statusColors[u.status] || statusColors.PENDING;
                 return (
-                  <tr key={u.id}>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                  <tr key={u.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.02)'} onMouseLeave={e => e.currentTarget.style.background='transparent'}>
+                    <td style={{ padding: '1rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                         <div style={{
                           width: 32, height: 32, borderRadius: '50%',
                           background: 'rgba(249,115,22,0.1)',
@@ -115,48 +115,48 @@ export default function AdminUsers() {
                         }}>
                           {u.name?.charAt(0)}
                         </div>
-                        <span style={{ fontWeight: 600 }}>{u.name}</span>
+                        <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{u.name}</span>
                       </div>
                     </td>
-                    <td style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>{u.email}</td>
-                    <td>
+                    <td style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{u.email}</td>
+                    <td style={{ padding: '1rem' }}>
                       {u.targetExam ? (
                         <span className="badge badge-accent" style={{ fontSize: '0.7rem' }}>{u.targetExam}</span>
                       ) : <span style={{ color: 'var(--text-muted)' }}>—</span>}
                     </td>
-                    <td style={{ textAlign: 'center' }}>{u._count?.attempts || 0}</td>
-                    <td>
+                    <td style={{ padding: '1rem', textAlign: 'center', fontSize: '0.9rem' }}>{u._count?.attempts || 0}</td>
+                    <td style={{ padding: '1rem' }}>
                       <span style={{
                         padding: '0.25rem 0.625rem', borderRadius: '20px',
-                        fontSize: '0.75rem', fontWeight: 600,
+                        fontSize: '0.7rem', fontWeight: 600,
                         background: s.bg, color: s.color,
                         border: `1px solid ${s.color}30`,
                       }}>
                         {s.label}
                       </span>
                     </td>
-                    <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                    <td style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
                       {new Date(u.createdAt).toLocaleDateString('en-IN')}
                     </td>
-                    <td>
-                      <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap' }}>
+                    <td style={{ padding: '1rem' }}>
+                      <div style={{ display: 'flex', gap: '0.375rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                         {u.status === 'PENDING' && (
                           <>
-                            <button onClick={() => updateStatus(u.id, 'ACTIVE')} className="btn btn-success btn-sm">Approve</button>
-                            <button onClick={() => updateStatus(u.id, 'REJECTED')} className="btn btn-danger btn-sm">Reject</button>
+                            <button onClick={() => updateStatus(u.id, 'ACTIVE')} className="btn btn-success" style={{ padding: '0.3rem 0.75rem', fontSize: '0.75rem' }}>Approve</button>
+                            <button onClick={() => updateStatus(u.id, 'REJECTED')} className="btn btn-danger" style={{ padding: '0.3rem 0.75rem', fontSize: '0.75rem' }}>Reject</button>
                           </>
                         )}
                         {u.status === 'ACTIVE' && (
-                          <button onClick={() => updateStatus(u.id, 'SUSPENDED')} className="btn btn-danger btn-sm">Suspend</button>
+                          <button onClick={() => updateStatus(u.id, 'SUSPENDED')} className="btn btn-danger" style={{ padding: '0.3rem 0.75rem', fontSize: '0.75rem' }}>Suspend</button>
                         )}
                         {u.status === 'SUSPENDED' && (
-                          <button onClick={() => updateStatus(u.id, 'ACTIVE')} className="btn btn-success btn-sm">Reactivate</button>
+                          <button onClick={() => updateStatus(u.id, 'ACTIVE')} className="btn btn-success" style={{ padding: '0.3rem 0.75rem', fontSize: '0.75rem' }}>Reactivate</button>
                         )}
                         {u.status === 'REJECTED' && (
-                          <button onClick={() => updateStatus(u.id, 'ACTIVE')} className="btn btn-secondary btn-sm">Activate</button>
+                          <button onClick={() => updateStatus(u.id, 'ACTIVE')} className="btn btn-secondary" style={{ padding: '0.3rem 0.75rem', fontSize: '0.75rem' }}>Activate</button>
                         )}
                         {u.role !== 'SUPER_ADMIN' && (
-                          <button onClick={() => deleteUser(u.id, u.name)} className="btn btn-danger btn-sm">🗑</button>
+                          <button onClick={() => deleteUser(u.id, u.name)} className="btn btn-danger" style={{ padding: '0.3rem 0.5rem', fontSize: '0.8rem' }}>🗑</button>
                         )}
                       </div>
                     </td>

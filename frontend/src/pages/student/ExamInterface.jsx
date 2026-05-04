@@ -3,7 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { studentAPI } from '../../services/api';
 import toast from 'react-hot-toast';
 
-const STATUS = { UNATTEMPTED: 'unattempted', ATTEMPTED: 'attempted', REVIEW: 'review' };
+const STATUS = { 
+  UNVISITED: 'unvisited', 
+  VISITED: 'visited', 
+  ATTEMPTED: 'attempted', 
+  REVIEW: 'review' 
+};
 
 export default function ExamInterface() {
   const { testId } = useParams();
@@ -14,7 +19,9 @@ export default function ExamInterface() {
   const [attemptId, setAttemptId] = useState(null);
   const [responses, setResponses] = useState({}); // { questionId: { selectedOptionIds:[], isMarkedForReview: bool } }
   const [currentIdx, setCurrentIdx] = useState(0);
+  const [visitedQuestions, setVisitedQuestions] = useState(new Set([0])); // Track visited indices
   const [timeLeft, setTimeLeft] = useState(0);
+  const [paletteOpen, setPaletteOpen] = useState(false); // Mobile palette toggle
   const [startedAt, setStartedAt] = useState(null);
   const timerRef = useRef(null);
   const autoSaveRef = useRef(null);
@@ -128,20 +135,29 @@ export default function ExamInterface() {
     }
   };
 
-  const getStatus = (qId) => {
-    const r = responses[qId];
-    if (!r) return STATUS.UNATTEMPTED;
-    if (r.isMarkedForReview) return STATUS.REVIEW;
-    if (r.selectedOptionIds?.length > 0) return STATUS.ATTEMPTED;
-    return STATUS.UNATTEMPTED;
+  const getStatus = (qIdx) => {
+    const q = test.questions[qIdx];
+    const r = responses[q.id];
+    
+    if (r?.isMarkedForReview) return STATUS.REVIEW;
+    if (r?.selectedOptionIds?.length > 0) return STATUS.ATTEMPTED;
+    if (visitedQuestions.has(qIdx)) return STATUS.VISITED;
+    return STATUS.UNVISITED;
+  };
+
+  // Update visited status when changing question
+  const handleSetIdx = (idx) => {
+    setCurrentIdx(idx);
+    setVisitedQuestions(prev => new Set([...prev, idx]));
   };
 
   const fmt = (s) => `${String(Math.floor(s / 3600)).padStart(2, '0')}:${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
   const counts = test?.questions ? {
-    attempted: test.questions.filter(q => getStatus(q.id) === STATUS.ATTEMPTED).length,
-    review: test.questions.filter(q => getStatus(q.id) === STATUS.REVIEW).length,
-    unattempted: test.questions.filter(q => getStatus(q.id) === STATUS.UNATTEMPTED).length,
+    attempted: test.questions.filter((q, i) => getStatus(i) === STATUS.ATTEMPTED).length,
+    review: test.questions.filter((q, i) => getStatus(i) === STATUS.REVIEW).length,
+    visited: test.questions.filter((q, i) => getStatus(i) === STATUS.VISITED).length,
+    unvisited: test.questions.filter((q, i) => getStatus(i) === STATUS.UNVISITED).length,
   } : {};
 
   if (phase === 'loading') return (
@@ -187,8 +203,9 @@ export default function ExamInterface() {
             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
               {[
                 { color: '#22c55e', label: 'Attempted' },
-                { color: '#ef4444', label: 'Not Attempted' },
+                { color: '#ef4444', label: 'Visited (Not Answered)' },
                 { color: '#3b82f6', label: 'Marked for Review' },
+                { color: '#64748b', label: 'Not Visited' },
                 { color: '#f97316', label: 'Current Question' },
               ].map((l, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.8rem' }}>
@@ -238,7 +255,12 @@ export default function ExamInterface() {
           ⏱ {fmt(timeLeft)}
         </div>
 
-        <button onClick={() => handleSubmit(false)} className="btn btn-primary btn-sm">Submit Test</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <button onClick={() => setPaletteOpen(!paletteOpen)} className="btn btn-secondary btn-sm md-hidden" style={{ fontSize: '1rem', padding: '0.5rem' }}>
+            📊
+          </button>
+          <button onClick={() => handleSubmit(false)} className="btn btn-primary btn-sm">Submit Test</button>
+        </div>
       </div>
 
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
@@ -311,9 +333,9 @@ export default function ExamInterface() {
                   🔖 {currentResponse?.isMarkedForReview ? 'Unmark' : 'Mark for Review'}
                 </button>
                 <div style={{ flex: 1 }} />
-                <button onClick={() => setCurrentIdx(i => Math.max(0, i - 1))} className="btn btn-secondary btn-sm" disabled={currentIdx === 0}>← Prev</button>
+                <button onClick={() => handleSetIdx(Math.max(0, currentIdx - 1))} className="btn btn-secondary btn-sm" disabled={currentIdx === 0}>← Prev</button>
                 {currentIdx < test.questions.length - 1
-                  ? <button onClick={() => setCurrentIdx(i => i + 1)} className="btn btn-primary btn-sm">Save & Next →</button>
+                  ? <button onClick={() => handleSetIdx(currentIdx + 1)} className="btn btn-primary btn-sm">Save & Next →</button>
                   : <button onClick={() => handleSubmit(false)} className="btn btn-primary btn-sm">Submit →</button>
                 }
               </div>
@@ -321,19 +343,21 @@ export default function ExamInterface() {
           )}
         </div>
 
-        {/* Question Palette */}
-        <div style={{
-          width: '240px', background: 'var(--bg-secondary)', borderLeft: '1px solid var(--border)',
-          display: 'flex', flexDirection: 'column', flexShrink: 0, overflowY: 'auto',
-        }}>
+        {/* Question Palette Sidebar */}
+        <div 
+          onClick={() => setPaletteOpen(false)}
+          className={`exam-palette-overlay ${paletteOpen ? 'show' : ''}`} 
+        />
+        <div className={`exam-palette ${paletteOpen ? 'open' : ''}`}>
           {/* Summary */}
           <div style={{ padding: '1rem', borderBottom: '1px solid var(--border)' }}>
             <p style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.625rem' }}>SUMMARY</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
               {[
                 { color: '#22c55e', label: 'Attempted', count: counts.attempted },
-                { color: '#ef4444', label: 'Not Attempted', count: counts.unattempted },
+                { color: '#ef4444', label: 'Visited', count: counts.visited },
                 { color: '#3b82f6', label: 'For Review', count: counts.review },
+                { color: '#64748b', label: 'Unvisited', count: counts.unvisited },
               ].map((s, i) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
@@ -351,11 +375,14 @@ export default function ExamInterface() {
             <p style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.625rem' }}>QUESTIONS</p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.375rem' }}>
               {test?.questions.map((q, i) => {
-                const status = getStatus(q.id);
+                const status = getStatus(i);
                 const isCurrent = i === currentIdx;
                 return (
-                  <button key={q.id} onClick={() => setCurrentIdx(i)}
-                    className={`q-btn ${isCurrent ? 'q-btn-current' : status === STATUS.ATTEMPTED ? 'q-btn-attempted' : status === STATUS.REVIEW ? 'q-btn-review' : 'q-btn-unattempted'}`}>
+                  <button key={q.id} onClick={() => handleSetIdx(i)}
+                    className={`q-btn ${isCurrent ? 'q-btn-current' : 
+                      status === STATUS.ATTEMPTED ? 'q-btn-attempted' : 
+                      status === STATUS.REVIEW ? 'q-btn-review' : 
+                      status === STATUS.VISITED ? 'q-btn-visited' : 'q-btn-unvisited'}`}>
                     {i + 1}
                   </button>
                 );

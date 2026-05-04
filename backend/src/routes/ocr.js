@@ -29,46 +29,75 @@ router.post('/extract', upload.single('file'), async (req, res) => {
   }
 
   try {
+    let questions = [];
     let extractedText = '';
 
-    if (req.file.mimetype === 'application/pdf') {
-      // Extract text from PDF
+    // Use Gemini 2.5 Flash (Future-proof and highly accurate)
+    if (process.env.GEMINI_API_KEY) {
       try {
+        const { GoogleGenerativeAI } = require("@google/generative-ai");
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        // Using Gemini 2.5 Flash as confirmed from available models list
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }, { apiVersion: 'v1' });
+
+        const fileData = fs.readFileSync(req.file.path);
+        const base64Data = fileData.toString('base64');
+
+        const prompt = `
+          Extract all multiple-choice questions from this image/document.
+          Return ONLY a valid JSON array of objects with this structure:
+          [{
+            "questionText": "string",
+            "explanation": "string (brief explanation)",
+            "marks": 4,
+            "negativeMarks": 1,
+            "isMultipleCorrect": false,
+            "options": [
+              { "optionText": "string", "isCorrect": boolean }
+            ]
+          }]
+          Important: Return ONLY the JSON array.
+        `;
+
+        const result = await model.generateContent([
+          prompt,
+          {
+            inlineData: {
+              data: base64Data,
+              mimeType: req.file.mimetype
+            }
+          }
+        ]);
+
+        const responseText = result.response.text();
+        const jsonMatch = responseText.match(/\[[\s\S]*\]/);
+        
+        if (jsonMatch) {
+          questions = JSON.parse(jsonMatch[0]);
+          extractedText = "Extracted via Gemini 2.5 AI";
+        }
+      } catch (geminiErr) {
+        console.error('Gemini 2.5 OCR Error:', geminiErr.message);
+      }
+    }
+
+    // Fallback to Tesseract/Regex if Gemini didn't produce results
+    if (questions.length === 0) {
+      if (req.file.mimetype === 'application/pdf') {
         const pdfParse = require('pdf-parse');
         const dataBuffer = fs.readFileSync(req.file.path);
         const pdfData = await pdfParse(dataBuffer);
         extractedText = pdfData.text;
-      } catch (pdfErr) {
-        console.error('PDF parse error:', pdfErr.message);
-        extractedText = '';
-      }
-    } else {
-      // Use Tesseract.js for image OCR
-      try {
+      } else {
         const Tesseract = require('tesseract.js');
-        const { data } = await Tesseract.recognize(req.file.path, 'eng', {
-          logger: () => {}, // suppress logs
-        });
+        const { data } = await Tesseract.recognize(req.file.path, 'eng');
         extractedText = data.text;
-      } catch (ocrErr) {
-        console.error('OCR error:', ocrErr.message);
-        extractedText = '';
       }
+      questions = parseQuestionsFromText(extractedText);
     }
 
     // Clean up uploaded file
     fs.unlinkSync(req.file.path);
-
-    if (!extractedText.trim()) {
-      return res.status(422).json({
-        error: 'Could not extract text from file. Please ensure the image/PDF is clear and readable.',
-        rawText: '',
-        questions: [],
-      });
-    }
-
-    // Parse extracted text into questions
-    const questions = parseQuestionsFromText(extractedText);
 
     res.json({
       rawText: extractedText,
@@ -77,7 +106,6 @@ router.post('/extract', upload.single('file'), async (req, res) => {
     });
   } catch (err) {
     console.error('OCR route error:', err);
-    // Clean up file if still exists
     if (req.file?.path && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }

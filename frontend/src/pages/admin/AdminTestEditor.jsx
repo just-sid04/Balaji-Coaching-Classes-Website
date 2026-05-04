@@ -432,37 +432,82 @@ export default function AdminTestEditor() {
 
                 {/* Options */}
                 <div>
-                  <label className="label">Options ({q.isMultipleCorrect ? 'Multiple' : 'Single'} Correct)</label>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                    <label className="label" style={{ marginBottom: 0 }}>Options ({q.isMultipleCorrect ? 'Multiple' : 'Single'} Correct)</label>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Click "Mark Correct" to set the answer</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                     {q.options.map((o, oIdx) => (
                       <div key={oIdx} style={{
-                        display: 'flex', gap: '0.75rem', alignItems: 'center',
-                        padding: '0.625rem', borderRadius: '8px',
-                        background: o.isCorrect ? 'rgba(34,197,94,0.08)' : 'rgba(255,255,255,0.03)',
-                        border: o.isCorrect ? '1px solid rgba(34,197,94,0.3)' : '1px solid var(--border)',
-                        transition: 'all 0.2s',
+                        display: 'flex', gap: '1rem', alignItems: 'center',
+                        padding: '1rem', borderRadius: '12px',
+                        background: o.isCorrect ? 'rgba(34,197,94,0.12)' : 'rgba(255,255,255,0.03)',
+                        border: o.isCorrect ? '1px solid rgba(34,197,94,0.4)' : '1px solid var(--border)',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        position: 'relative',
                       }}>
-                        <input
-                          type={q.isMultipleCorrect ? 'checkbox' : 'radio'}
-                          name={`q${qIdx}-correct`}
-                          checked={o.isCorrect}
-                          onChange={() => updateOption(qIdx, oIdx, 'isCorrect', !o.isCorrect)}
-                          style={{ accentColor: '#22c55e', width: 16, height: 16, flexShrink: 0, cursor: 'pointer' }}
-                        />
-                        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', flexShrink: 0 }}>
+                        {/* Correct Option Toggle */}
+                        <div 
+                          onClick={() => updateOption(qIdx, oIdx, 'isCorrect', !o.isCorrect)}
+                          style={{
+                            padding: '0.4rem 0.75rem',
+                            borderRadius: '8px',
+                            fontSize: '0.7rem',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            userSelect: 'none',
+                            background: o.isCorrect ? '#22c55e' : 'rgba(255,255,255,0.05)',
+                            color: o.isCorrect ? 'white' : 'var(--text-muted)',
+                            border: o.isCorrect ? '1px solid #22c55e' : '1px solid var(--border)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.4rem',
+                            transition: 'all 0.2s',
+                            boxShadow: o.isCorrect ? '0 4px 12px rgba(34,197,94,0.3)' : 'none',
+                          }}
+                        >
+                          {o.isCorrect ? '✓ Correct' : 'Mark Correct'}
+                        </div>
+
+                        <span style={{ fontSize: '0.9rem', fontWeight: 800, color: o.isCorrect ? '#22c55e' : 'var(--text-muted)', flexShrink: 0, width: '20px' }}>
                           {['A', 'B', 'C', 'D', 'E', 'F'][oIdx]}
                         </span>
-                        <input className="input" style={{ border: 'none', background: 'transparent', padding: '0', flex: 1 }}
+
+                        <input 
+                          className="input" 
+                          style={{ border: 'none', background: 'transparent', padding: '0', flex: 1, fontSize: '0.9375rem' }}
                           value={o.optionText}
                           onChange={e => updateOption(qIdx, oIdx, 'optionText', e.target.value)}
-                          placeholder={`Option ${['A', 'B', 'C', 'D'][oIdx] || oIdx + 1}`} />
+                          placeholder={`Enter option ${['A', 'B', 'C', 'D'][oIdx] || oIdx + 1} text...`} 
+                        />
+
                         {q.options.length > 2 && (
-                          <button onClick={() => removeOption(qIdx, oIdx)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '1rem', flexShrink: 0 }}>×</button>
+                          <button 
+                            onClick={() => removeOption(qIdx, oIdx)} 
+                            style={{ 
+                              background: 'rgba(239, 68, 68, 0.1)', 
+                              border: 'none', 
+                              color: '#ef4444', 
+                              cursor: 'pointer', 
+                              width: '28px',
+                              height: '28px',
+                              borderRadius: '50%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '1.2rem',
+                              transition: 'all 0.2s'
+                            }}
+                          >
+                            ×
+                          </button>
                         )}
                       </div>
                     ))}
                   </div>
-                  <button onClick={() => addOption(qIdx)} className="btn btn-secondary btn-sm" style={{ marginTop: '0.5rem' }}>+ Add Option</button>
+                  <button onClick={() => addOption(qIdx)} className="btn btn-secondary btn-sm" style={{ marginTop: '1rem', width: '100%', borderStyle: 'dashed' }}>
+                    + Add New Option
+                  </button>
                 </div>
 
                 <div style={{ marginTop: '1rem' }}>
