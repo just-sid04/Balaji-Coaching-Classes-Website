@@ -57,6 +57,20 @@
     overflow-x: hidden;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.2);
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.4); }
+
+  html, body {
+    scrollbar-color: rgba(148, 163, 184, 0.2) transparent;
+    scrollbar-width: thin;
+  }
 }
 
 @layer components {
