@@ -44,10 +44,6 @@ router.get('/tests', async (req, res) => {
 
     const where = {
       status: 'PUBLISHED',
-      OR: [
-        { startDate: null },
-        { startDate: { lte: new Date() } },
-      ],
     };
 
     if (sectionId) where.sectionId = sectionId;
