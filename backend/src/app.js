@@ -65,20 +65,20 @@ app.use('/api/ocr', ocrRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api', publicRoutes);
 
-// ─── Debug Endpoint (Remove in production) ──────────────────────────────────
-app.get('/api/debug', (req, res) => {
-  res.json({
-    env: {
-      NODE_ENV: process.env.NODE_ENV,
-      HAS_DATABASE_URL: !!process.env.DATABASE_URL,
-      HAS_JWT_SECRET: !!process.env.JWT_SECRET,
-      HAS_FRONTEND_URL: !!process.env.FRONTEND_URL,
-      FRONTEND_URL: process.env.FRONTEND_URL,
-    },
-    headers: req.headers,
-    url: req.url,
-    originalUrl: req.originalUrl,
-  });
+// ─── DB Test Endpoint ──────────────────────────────────────────────────────────
+app.get('/api/dbtest', async (req, res) => {
+  try {
+    const prisma = require('./lib/prisma');
+    const count = await prisma.user.count();
+    res.json({ success: true, userCount: count, dbUrl: process.env.DATABASE_URL?.slice(0, 40) + '...' });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: err.message,
+      code: err.code,
+      type: err.constructor?.name,
+    });
+  }
 });
 
 // ─── Health Check ──────────────────────────────────────────────────────────────
