@@ -13,26 +13,26 @@
       }
     }
   ],
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/(.*)",
-      "destination": "backend/src/app.js"
+      "src": "/api/(.*)",
+      "dest": "backend/src/app.js"
     },
     {
-      "source": "/health",
-      "destination": "backend/src/app.js"
+      "src": "/health",
+      "dest": "backend/src/app.js"
     },
     {
-      "source": "/assets/(.*)",
-      "destination": "/assets/$1"
+      "src": "/assets/(.*)",
+      "dest": "frontend/assets/$1"
     },
     {
-      "source": "/favicon.ico",
-      "destination": "/favicon.ico"
+      "src": "/favicon.ico",
+      "dest": "frontend/favicon.ico"
     },
     {
-      "source": "/((?!api/|health|assets/).*)",
-      "destination": "/index.html"
+      "src": "/((?!api|health|assets|favicon.ico).*)",
+      "dest": "frontend/index.html"
     }
   ]
 }
